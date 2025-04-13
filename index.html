@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>VR Sistem Pencernaan - Organ Terpisah</title>
+    <script src="https://aframe.io/releases/1.4.1/aframe.min.js"></script>
+  </head>
+  <body>
+    <a-scene>
+      <!-- Aset model organ -->
+      <a-assets>
+        <a-asset-item id="modelMulut" src="assets/mulut.glb"></a-asset-item>
+        <a-asset-item id="modelKerongkongan" src="assets/kerongkongan.glb"></a-asset-item>
+        <a-asset-item id="modelLambung" src="assets/lambung.glb"></a-asset-item>
+        <a-asset-item id="modelUsus" src="assets/usus.glb"></a-asset-item>
+      </a-assets>
+
+      <!-- Kamera dan kursor -->
+      <a-entity id="rig" position="0 1.6 0">
+        <a-camera>
+          <a-cursor
+            fuse="true"
+            fuse-timeout="500"
+            raycaster="objects: .clickable"
+            color="red"
+          ></a-cursor>
+        </a-camera>
+      </a-entity>
+
+      <!-- Latar -->
+      <a-sky color="#CEF2FF"></a-sky>
+      <a-plane rotation="-90 0 0" width="100" height="100" color="#FAF3DD"></a-plane>
+
+      <!-- Organ-organ 3D -->
+      <a-gltf-model id="mulut" src="#modelMulut" position="0 1 -4" scale="1 1 1" class="clickable"></a-gltf-model>
+      <a-gltf-model id="kerongkongan" src="#modelKerongkongan" position="2 0.5 -4" scale="1 1 1" class="clickable"></a-gltf-model>
+      <a-gltf-model id="lambung" src="#modelLambung" position="0 0 -4" scale="1 1 1" class="clickable"></a-gltf-model>
+      <a-gltf-model id="usus" src="#modelUsus" position="-2 -0.5 -4" scale="1 1 1" class="clickable"></a-gltf-model>
+
+      <!-- Teks Penjelasan -->
+      <a-entity id="penjelasan" position="0 3 -3">
+        <a-text value="Klik organ untuk penjelasan." align="center" width="6" color="#000"></a-text>
+      </a-entity>
+
+      <!-- Tombol Navigasi -->
+      <a-box position="2 1.5 -3" depth="0.1" height="0.5" width="0.5" color="#28a745" class="clickable" id="nextButton">
+        <a-text value="Next" align="center" position="0 0 0.1" color="#fff" width="2"></a-text>
+      </a-box>
+      <a-box position="-2 1.5 -3" depth="0.1" height="0.5" width="0.5" color="#dc3545" class="clickable" id="prevButton">
+        <a-text value="Prev" align="center" position="0 0 0.1" color="#fff" width="2"></a-text>
+      </a-box>
+
+      <!-- Script interaktif -->
+      <script>
+        const organData = {
+          mulut: {
+            text: 'Mulut: Tempat masuknya makanan dan proses mengunyah.',
+            camPosition: { x: 0, y: 2, z: -3 }
+          },
+          kerongkongan: {
+            text: 'Kerongkongan: Menyalurkan makanan dari mulut ke lambung.',
+            camPosition: { x: 2, y: 1.5, z: -3 }
+          },
+          lambung: {
+            text: 'Lambung: Tempat pencernaan awal dengan enzim.',
+            camPosition: { x: 0, y: 1, z: -3 }
+          },
+          usus: {
+            text: 'Usus: Menyerap zat gizi dari makanan.',
+            camPosition: { x: -2, y: 0.5, z: -3 }
+          }
+        };
+
+        const organOrder = Object.keys(organData);
+        let currentIndex = 0;
+
+        const rig = document.querySelector('#rig');
+        const penjelasan = document.querySelector('#penjelasan a-text');
+
+        function speak(text) {
+          const msg = new SpeechSynthesisUtterance(text);
+          msg.lang = 'id-ID';
+          speechSynthesis.speak(msg);
+        }
+
+        function goToOrgan(index) {
+          const id = organOrder[index];
+          const data = organData[id];
+          rig.setAttribute('animation__move', {
+            property: 'position',
+            to: `${data.camPosition.x} ${data.camPosition.y} ${data.camPosition.z}`,
+            dur: 1000,
+            easing: 'easeInOutQuad'
+          });
+          penjelasan.setAttribute('value', data.text);
+          speak(data.text);
+        }
+
+        // Klik organ manual
+        document.querySelectorAll('.clickable').forEach(el => {
+          el.addEventListener('click', () => {
+            const id = el.getAttribute('id');
+            if (organData[id]) {
+              currentIndex = organOrder.indexOf(id);
+              goToOrgan(currentIndex);
+            }
+          });
+        });
+
+        // Navigasi
+        document.getElementById('nextButton').addEventListener('click', () => {
+          if (currentIndex < organOrder.length - 1) {
+            currentIndex++;
+            goToOrgan(currentIndex);
+          }
+        });
+
+        document.getElementById('prevButton').addEventListener('click', () => {
+          if (currentIndex > 0) {
+            currentIndex--;
+            goToOrgan(currentIndex);
+          }
+        });
+
+        goToOrgan(currentIndex); // Init awal
+      </script>
+    </a-scene>
+  </body>
+</html>
